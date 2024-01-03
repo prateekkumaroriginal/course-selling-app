@@ -2,12 +2,14 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const jwt = require('jsonwebtoken');
 const mongoose = require('mongoose');
+const cors = require('cors');
 
 const app = express();
 const port = 3000;
 require('dotenv').config();
 
 app.use(bodyParser.json());
+app.use(cors());
 const secretKey = process.env.SECRET_KEY;
 const mongodb_connection_string = process.env.MONGODB_CONNECTION_STRING;
 
@@ -75,9 +77,24 @@ app.post('/admin/login', async (req, res) => {
     }
 });
 
+app.get('/admin/me', authenticateJwt, (req, res) => {
+    res.json({
+        username: req.user.username
+    })
+});
+
 app.post('/admin/courses', authenticateJwt, async (req, res) => {
     const course = await Course.create(req.body);
     res.status(201).json({ message: 'Course created successfully', courseId: course._id });
+});
+
+app.get('/admin/courses/:courseId', authenticateJwt, async (req, res) => {
+    const course = await Course.findById(req.params.courseId)
+    if (course) {
+        res.json(course)
+    } else {
+        res.status(404).json({ message: 'Course not found' })
+    }
 });
 
 app.put('/admin/courses/:courseId', authenticateJwt, async (req, res) => {
@@ -117,9 +134,24 @@ app.post('/users/login', async (req, res) => {
     }
 });
 
+app.get('/users/me', authenticateJwt, (req, res) => {
+    res.json({
+        username: req.user.username
+    })
+});
+
 app.get('/users/courses', authenticateJwt, async (req, res) => {
     const courses = await Course.find({ published: true });
     res.json({ courses });
+});
+
+app.get('/users/courses/:courseId', authenticateJwt, async (req, res) => {
+    const course = await Course.findOne({ _id: req.params.courseId, published: true })
+    if (course) {
+        res.json(course)
+    } else {
+        res.status(404).json({ message: 'Course not found' })
+    }
 });
 
 app.post('/users/courses/:courseId', authenticateJwt, async (req, res) => {
