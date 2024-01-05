@@ -89,9 +89,16 @@ app.post('/admin/courses', authenticateJwt, async (req, res) => {
 });
 
 app.get('/admin/courses/:courseId', authenticateJwt, async (req, res) => {
-    const course = await Course.findById(req.params.courseId)
+    let course = null;
+    try {
+        course = await Course.findById(req.params.courseId)
+    } catch (err) {
+        if (!(err instanceof mongoose.Error.CastError)) {
+            console.log(e);
+        }
+    }
     if (course) {
-        res.json(course)
+        res.json({course})
     } else {
         res.status(404).json({ message: 'Course not found' })
     }
@@ -146,7 +153,14 @@ app.get('/users/courses', authenticateJwt, async (req, res) => {
 });
 
 app.get('/users/courses/:courseId', authenticateJwt, async (req, res) => {
-    const course = await Course.findOne({ _id: req.params.courseId, published: true })
+    let course = null;
+    try {
+        course = await Course.findOne({ _id: req.params.courseId, published: true })
+    } catch (err) {
+        if (!(err instanceof mongoose.Error.CastError)) {
+            console.log(e);
+        }
+    }
     if (course) {
         res.json(course)
     } else {
